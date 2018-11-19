@@ -12,10 +12,12 @@ public class Agent {
     private Action intention;
     private ArrayList<ArrayList<CellState>> beliefs;
     private Position position;
+    private InferenceEngine inferenceEngine;
 
-    public Agent(Sensor sensor, Effector effector) {
+    public Agent(Sensor sensor, Effector effector, InferenceEngine inferenceEngine) {
         this.sensor = sensor;
         this.effector = effector;
+        this.inferenceEngine = inferenceEngine;
     }
     
     public boolean desire(){
@@ -25,11 +27,6 @@ public class Agent {
     
     public void update(){
         
-    }
-    
-    public Action inferenceMotor(){
-        
-        return Action.SHOOT;
     }
     
     public void act(){
