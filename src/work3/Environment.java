@@ -10,35 +10,52 @@ public class Environment {
 
     private int performance;
     private Position agentPosition;
-    private ArrayList<ArrayList<CellState>> forest;
-    private int level;
+    private ArrayList<ArrayList<State>> forest;
+    private int mapSize;
 
+    /**
+     * Constructor
+     */
     public Environment() {
-        level = 3;
+        mapSize = 3;
         performance = 0;
         forest = new ArrayList<>();
         generateForest();
 
     }
 
-    public void updateForestLevel() {
-        level++;
-        forest.clear();
-        generateForest();
+    public int getMapSize() {
+        return mapSize;
     }
+    
+    /**
+     * Update the forest when a new level is reached
+     */
+    public void updateForestLevel() {
+        System.out.println("Agent performance : "+performance);
+        this.performance += mapSize * mapSize * 10;
+        mapSize++;
+        forest.clear();
+        agentPosition = new Position(0, 0);
+        generateForest();
 
+    }
+    
+    /**
+     * Random generation of the forest
+     */
     private void generateForest() {
-        ArrayList<CellState> line = new ArrayList<>();
-        for (int i = 0; i < level; i++) { //collumn
-            line.add(CellState.EMPTY);
+        ArrayList<State> line = new ArrayList<>();
+        for (int i = 0; i < mapSize; i++) { //collumn
+            line.add(State.EMPTY);
         }
-        for (int i = 0; i < level; i++) {
-            forest.add((ArrayList<CellState>) line.clone());
+        for (int i = 0; i < mapSize; i++) {
+            forest.add((ArrayList<State>) line.clone());
         }
 
         ArrayList<Position> randomAuthorized = new ArrayList<>();
-        for (int i = 0; i < level; i++) {
-            for (int j = 0; j < level; j++) {
+        for (int i = 0; i < mapSize; i++) {
+            for (int j = 0; j < mapSize; j++) {
                 randomAuthorized.add(new Position(j, i));
             }
         }
@@ -46,8 +63,8 @@ public class Environment {
 
         int random;
 
-        int nbPinkMonster = ((level / 2) + (level % 2)) - 1;
-        int nbHole = (level / 2);
+        int nbPinkMonster = ((mapSize / 2) + (mapSize % 2)) - 1;
+        int nbHole = (mapSize / 2);
 
         int countPinkMonster = 0;
         int countHole = 0;
@@ -57,33 +74,41 @@ public class Environment {
         while (countPinkMonster != nbPinkMonster || countHole != nbHole) {
             random = (int) (Math.random() * (randomAuthorized.size()));
             position = randomAuthorized.get(random);
-            if (forest.get(position.getX()).get(position.getY()) == CellState.EMPTY && 
-                    (position.getX() != agentPosition.getX() || 
-                    position.getY() != agentPosition.getY())) {
+            if (forest.get(position.getX()).get(position.getY()) == State.EMPTY
+                    && (position.getX() != agentPosition.getX()
+                    || position.getY() != agentPosition.getY())) {
                 if (countPinkMonster < nbPinkMonster) {
-                    forest.get(position.getX()).set(position.getY(), CellState.PINK_MONSTER);
+                    forest.get(position.getX()).set(position.getY(), State.PINK_MONSTER);
                     countPinkMonster++;
                     randomAuthorized.remove(position);
-                    addState(CellState.PINK_MONSTER, position, randomAuthorized, level);
+                    addState(State.PINK_MONSTER, position, randomAuthorized, mapSize);
                 } else {
-                    forest.get(position.getX()).set(position.getY(), CellState.HOLE);
+                    forest.get(position.getX()).set(position.getY(), State.HOLE);
                     countHole++;
                     randomAuthorized.remove(position);
-                    addState(CellState.HOLE, position, randomAuthorized, level);
+                    addState(State.HOLE, position, randomAuthorized, mapSize);
                 }
             }
         }
-        random = (int) (Math.random() * (randomAuthorized.size())) + 1;
-        forest.get(randomAuthorized.get(random).getX()).set((randomAuthorized.get(random).getY()), CellState.PORTAL);
+        random = (int) (Math.random() * (randomAuthorized.size()));
+        forest.get(randomAuthorized.get(random).getX()).set((randomAuthorized.get(random).getY()), State.PORTAL);
         randomAuthorized.remove(randomAuthorized.get(random));
     }
 
-    private void addState(CellState state, Position p, ArrayList<Position> list, int level) {
-        CellState borderState;
-        if (state == CellState.PINK_MONSTER) {
-            borderState = CellState.RAINBOW_POOP;
+    /**
+     * Add warnings around danger 
+     * part of the generation process
+     * @param state
+     * @param p
+     * @param list
+     * @param level 
+     */
+    private void addState(State state, Position p, ArrayList<Position> list, int level) {
+        State borderState;
+        if (state == State.PINK_MONSTER) {
+            borderState = State.RAINBOW_POOP;
         } else {
-            borderState = CellState.CLOUD;
+            borderState = State.CLOUD;
         }
         ArrayList<Position> toRemove = new ArrayList<>();
         for (Position curPos : list) {
@@ -116,8 +141,8 @@ public class Environment {
     @Override
     public String toString() {
         String print = new String();
-        for (int i = 0; i < level; i++) {
-            for (int j = 0; j < level; j++) {
+        for (int i = 0; i < mapSize; i++) {
+            for (int j = 0; j < mapSize; j++) {
                 switch (forest.get(i).get(j)) {
                     case CLOUD:
                         print = print.concat("C ");
@@ -140,10 +165,9 @@ public class Environment {
                     default:
                         print = print.concat("E ");
                 }
-                if (agentPosition.getX() == j && agentPosition.getY() == i) {
+                if (agentPosition.getX() == i && agentPosition.getY() == j) {
                     print = print.concat("*   ");
-                }
-                else{
+                } else {
                     print = print.concat("    ");
                 }
 
@@ -151,5 +175,40 @@ public class Environment {
             print = print.concat("\n");
         }
         return (print);
+    }
+
+    /**
+     * Update the agent position in the forest
+     * @param nextPosition 
+     */
+    public void updateAgentPosition(Position nextPosition) {
+        this.agentPosition = nextPosition;
+        this.performance -= mapSize;
+        
+    }
+
+    /**
+     * If the position target contains a monster, it kills him
+     * @param positionTarget 
+     */
+    public void tryKillMonster(Position positionTarget) {
+        this.performance -= 10;
+        if (this.forest.get(positionTarget.getX()).get(positionTarget.getY()) == State.PINK_MONSTER) {
+            this.forest.get(positionTarget.getX()).set(positionTarget.getY(), State.EMPTY);
+        }
+    }
+
+    /**
+     * When  the agent dies he goes back to its initial position
+     */
+    public void agentDies() {
+        this.agentPosition = new Position(0, 0);
+        System.out.println("\nYou're dead");
+        System.out.println("Agent performance : "+performance);
+        System.out.println(this);
+    }
+
+    public State getCellForest(Position position) {
+        return forest.get(position.getX()).get(position.getY());
     }
 }

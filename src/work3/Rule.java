@@ -1,50 +1,84 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package work3;
 
 import java.util.ArrayList;
 
 /**
  *
- * @author orann
+ * @author Claire, Esther & Orann
  */
 public class Rule {
 
-    private final ArrayList<Fact> premises;
-    private final ArrayList<Fact> inferences;
+    private final ArrayList<State> premises;
+    private final State inference;
+    private final int priority; //0, 1, 2, 3 or 4
 
-    public Rule(ArrayList<Fact> premises, ArrayList<Fact> inferences) {
+    public Rule(ArrayList<State> premises, State inference, int priority) {
         this.premises = premises;
-        this.inferences = inferences;
+        this.inference = inference;
+        this.priority = priority;
     }
 
-    public boolean isRuleApplicable(ArrayList<Fact> currentFacts) {
-        boolean ret = true;
-        int count = 0;
-        while (count < premises.size() && ret) {
-            boolean isPremiseFound = false;
-            int numFact = 0;
-            while(numFact < currentFacts.size() && !isPremiseFound){
-                if (currentFacts.get(numFact) == premises.get(count)) {
-                    isPremiseFound = true;
-                }
+    /**
+     * tests if the rule is applicable on the facts' database
+     * @param factsBase
+     * @return 
+     */
+    public Fact isRuleApplicable(ArrayList<Fact> factsBase) {
+        int numFact = 0;
+        ArrayList<Fact> facts = new ArrayList<>();
+        ArrayList<Fact> applicableFacts = new ArrayList<>();
+        // tests the correspondance of the first premise
+        while (numFact < factsBase.size()) {
+            if (factsBase.get(numFact).getState() == premises.get(0)) {
+                facts.add(factsBase.get(numFact));
             }
-            if(!isPremiseFound) {
-                ret = false;
-            }
+            numFact++;
         }
-        return ret;
+        numFact = 0;
+        if (facts.isEmpty()) {
+            return null;
+        } 
+        
+        //if the rule has two premises, tests the correspondance of the second
+        else if (this.premises.size() == 2) {
+            if (facts.get(numFact).getParent() != null) { // if the fact has no parent, it can't match the second premise
+                while (numFact < facts.size()) {
+
+                    if (facts.get(numFact).getParent().getState() == premises.get(1)) {
+                        applicableFacts.add(facts.get(numFact));
+                    }
+                    numFact++;
+                }
+                if (applicableFacts.isEmpty()) {
+                    return null;
+                } 
+                else {
+                    return applicableFacts.get(0);
+                }
+            } 
+            else {
+                return null;
+            }
+        } 
+        
+        else {
+            return facts.get(0);
+        }
+
     }
 
-    public ArrayList<Fact> getInferences() {
-        return inferences;
-    }
     
-    public int getPriority(){
-        return premises.size();
+    public Fact getInference(ArrayList<Fact> facts) {
+        return new Fact(this.inference, facts.get(0), facts.get(0).getPosition());
+    }
+
+    public int getPriority() {
+        return priority;
+    }
+
+    @Override
+    public String toString() {
+        return "Rule{" + "premises=" + premises + ", inference=" + inference + ", priority=" + priority + "}\n";
     }
 
 }

@@ -47,28 +47,4 @@ public class Position {
     public int getY() {
         return y;
     }
-
-    /**
-     * Updates the attribute in function of the action done
-     *
-     * @param action
-     */
-    public void move(Action action) {
-        switch (action) {
-            case UP:
-                x = x - 1;
-                break;
-            case DOWN:
-                x = x + 1;
-                break;
-            case LEFT:
-                y = y - 1;
-                break;
-            case RIGHT:
-                y = y + 1;
-                break;
-            default:
-                break;
-        }
-    }
 }
